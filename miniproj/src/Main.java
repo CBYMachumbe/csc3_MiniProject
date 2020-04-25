@@ -13,9 +13,6 @@ public class Main extends Application
 {
 	public static void main(String args[])
 	{
-		
-		launch(args);
-		
 		/*Vertex<String> s1 = new Vertex<String>("Mabopane");
 		Vertex<String> s2 = new Vertex<String>("Hex");
 		Vertex<String> s3 = new Vertex<String>("Bro");
@@ -36,14 +33,20 @@ public class Main extends Application
 		stations.add(s4);
 		
 		Graph<String> eskom = new Graph<String>(stations,connections);
+		System.out.println(eskom);
+		Vertex<String> s5 = new Vertex<String>("Idle");
+		stations.add(s5);
 		System.out.println(eskom);*/
+		launch(args);
+		
+		
 	}
 
 	@Override
 	public void start(Stage primaryStage) throws Exception 
 	{
 		primaryStage.setTitle("Eskom Graphs");
-		Scene scene = new Scene(new GraphPane(),600,400);
+		Scene scene = new Scene(new GraphPane(),650,400);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		
