@@ -32,7 +32,7 @@ public class GraphPane extends StackPane
 	private ArrayList<Vertex<Station>> stations;
 	private ArrayList<Edge<Station>> connections;
 	ListView<String> lstStation;
-	private int vCount = 0;
+	private int vCount = 1;
 	private int eCount = 0;
 	
 	
@@ -41,6 +41,24 @@ public class GraphPane extends StackPane
 		Eskom = new Graph<Station>();
 		stations = new ArrayList<Graph.Vertex<Station>>();
 		connections = new ArrayList<Graph.Edge<Station>>();
+		
+		Vertex<Station> s1 = new Vertex<Station>(new Station("Mabopane", true, false));
+		Vertex<Station> s2 = new Vertex<Station>(new Station("Hex", true, false));
+		Vertex<Station> s3 = new Vertex<Station>(new Station("Mdansene", true, true));
+		Vertex<Station> s4 = new Vertex<Station>(new Station("Blur", false, false));
+		
+		/*Edge<String> e1 = new Edge<String>(20, s1, s2);
+		Edge<String> e2 = new Edge<String>(3, s1, s3);
+		Edge<String> e3 = new Edge<String>(70, s1, s4);
+		
+		connections.add(e1);
+		connections.add(e2);
+		connections.add(e3);*/
+		stations.add(s1);
+		stations.add(s2);
+		stations.add(s3);
+		stations.add(s4);
+		
 		
 		MenuBar menubar = new MenuBar();
 		Menu menuFile = new Menu("File");
@@ -84,9 +102,17 @@ public class GraphPane extends StackPane
 		vbox.getChildren().addAll(Box,lstStation);
 		
 		Button btnOutlet = new Button("Remove Outlet");
+		Button btnEditVertex = new Button("Adjust Outlet");
 		
-		VBox VertextBox = new VBox(10);
-		VertextBox.getChildren().addAll(vbox,btnOutlet);
+		HBox btnVEditBox = new HBox(80);
+		btnVEditBox.getChildren().addAll(btnEditVertex,btnOutlet);
+		
+		VBox vListBox = new VBox(10);
+		vListBox.getChildren().addAll(lstStation,btnVEditBox);
+		
+		
+		HBox VertextBox = new HBox(10);
+		VertextBox.getChildren().addAll(vbox,vListBox);
 		
 		
 		
@@ -120,6 +146,21 @@ public class GraphPane extends StackPane
 			
 		});
 		
+		btnEditVertex.setOnAction(e -> 
+		{
+			ObservableList<String>  toAdjust = lstStation.getSelectionModel().getSelectedItems();
+			
+			StringTokenizer adjustToken = null;
+
+			for(String ad : toAdjust)
+			{
+				lstStation.getItems().remove(ad);
+				adjustToken = new StringTokenizer(ad,",");
+				editVertex(adjustToken.nextToken());
+				
+			}
+		});
+		
 		//End: Add Stations Actions
 		
 		
@@ -128,7 +169,7 @@ public class GraphPane extends StackPane
 		//Add side
 		ListView<String> lstEdge = new ListView<String>();
 		lstEdge.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		lstEdge.setItems((ObservableList<String>) makeStationList());
+		
 		
 		if(vCount != 0)
 			for(Vertex<Station> st : stations)
@@ -147,7 +188,6 @@ public class GraphPane extends StackPane
 		//Remove side
 		ListView<String> lstEdges = new ListView<String>();
 		lstEdges.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		lstEdges.setItems((ObservableList<String>) makeStationList());
 		
 		if(eCount != 0)
 			for(Edge<Station> e : connections)
@@ -158,10 +198,14 @@ public class GraphPane extends StackPane
 		VBox ebox = new VBox();
 		ebox.getChildren().addAll(lblEdgelst,lstEdges);
 		
-		Button btnRemoveEdge = new Button("Remove Distance Between Outlet(s)");
+		Button btnRemoveEdge = new Button("Remove Connection");
+		Button btnEditEdge = new Button("Adjust Connection");
+		
+		HBox btnEditBox = new HBox(10);
+		btnEditBox.getChildren().addAll(btnEditEdge,btnRemoveEdge);
 		
 		VBox removeBox = new VBox(10);
-		removeBox.getChildren().addAll(ebox,btnRemoveEdge);
+		removeBox.getChildren().addAll(ebox,btnEditBox);
 		
 		
 		HBox edgeBox = new HBox(30);
@@ -174,7 +218,7 @@ public class GraphPane extends StackPane
 		
 		btnSubmitEdge.setOnAction(e -> 
 		{
-			ObservableList<String> toAdd = lstStation.getSelectionModel().getSelectedItems();		
+			ObservableList<String> toAdd = lstEdge.getSelectionModel().getSelectedItems();		
 			
 			StringTokenizer st1Tokens = new StringTokenizer(toAdd.get(0),",");
 			StringTokenizer st2Tokens = new StringTokenizer(toAdd.get(1),",");
@@ -191,9 +235,26 @@ public class GraphPane extends StackPane
 		
 		btnRemoveEdge.setOnAction(e -> 
 		{
-			//Need get Edge method
-			//lstEdges.getItems().remove(o);
+			ObservableList<String> toRemove = lstEdges.getSelectionModel().getSelectedItems();
 			
+			for(String rm : toRemove)
+			{
+				removeEdge(rm);
+				lstEdges.getItems().remove(rm);
+			}
+		});
+		
+		btnEditEdge.setOnAction(e ->
+		{
+			ObservableList<String> toAdjust = lstEdges.getSelectionModel().getSelectedItems();
+
+			for(String ad : toAdjust)
+			{
+				lstEdges.getItems().remove(ad);
+				Edge<Station> edge = editEdge(ad);
+				lstEdges.getItems().add(edge.toString());
+				
+			}
 		});
 		
 		//End: Actions for Edge management
@@ -295,7 +356,52 @@ public class GraphPane extends StackPane
 		Eskom = null;
 		Eskom = new Graph<Station>(stations, connections);
 		
-		System.out.println(Eskom);
+		vCount--;
+	}
+	
+	public void editVertex(String name)
+	{
+		TextInputDialog tdName = new TextInputDialog();
+		tdName.setHeaderText("Enter name of outlet");
+		
+		TextInputDialog tdStation = new TextInputDialog();
+		tdStation.setHeaderText("Is this outlet a station (yes/no)");
+		
+		TextInputDialog tdWorking = new TextInputDialog();
+		tdWorking.setHeaderText("Is this outlet working (yes/no)");
+		
+		tdName.showAndWait();
+		String stName = tdName.getEditor().getText();
+		
+		tdStation.showAndWait();
+		boolean isStaion = makeBool(tdStation.getEditor().getText(),"Is this outlet a station (yes/no)");
+		
+		tdWorking.showAndWait();
+		boolean isOn = makeBool(tdWorking.getEditor().getText(),"Is this outlet working (yes/no)");
+		
+		int index = stations.indexOf(getStation(name));
+		Vertex<Station> update = new Vertex<Station>(new Station(stName,isOn,isStaion));
+		
+		stations.set(index, update);
+		
+		System.out.println(stations);
+		
+		Eskom = null;
+		Eskom = new Graph<Station>(stations, connections);
+		
+		lstStation.getItems().add(update.getValue().toString());
+	}
+	
+	public Vertex<Station> getStation(String name)
+	{
+		for(Vertex<Station> st : stations)
+		{
+			if(st.getValue().getName().equals(name))
+				return st;
+				
+		}
+		
+		return null;
 	}
 	
 	public void addEdge(Vertex<Station> st1,Vertex<Station> st2, int distance)
@@ -337,50 +443,74 @@ public class GraphPane extends StackPane
 		Eskom = null;
 		Eskom = new Graph<Station>(stations, connections);
 		eCount ++;
+	}
+	
+	public void removeEdge(String signature)
+	{
+		Edge<Station> edge = null;
+
+		if(eCount != 0)
+		{
+			for(Edge<Station> e : connections)
+			{
+				if(e.toString().equals(signature))
+					edge = e;
+			}
+		}
+		
+		connections.remove(edge);
+		
+		Eskom = null;
+		Eskom = new Graph<Station>(stations, connections);
+		
+		eCount--;
+	}
+	
+	public Edge<Station> editEdge(String signature)
+	{
+		
+		Edge<Station> edge = null;
+		if(eCount != 0)
+		{
+			for(Edge<Station> e : connections)
+			{
+				if(e.toString().equals(signature))
+					edge = e;
+			}
+		}
+		
+		TextInputDialog tdDistance = new TextInputDialog();
+		tdDistance.setHeaderText("What is the distance between these outlets");
+		tdDistance.showAndWait();
+		String strDistance = tdDistance.getEditor().getText();
+		int distance = Integer.parseInt(strDistance);
+		
+		Edge<Station> newConnection = new Edge<Station>(distance, edge.getFromVertex(), edge.getToVertex());
+		
+		int index = connections.indexOf(edge);
+		connections.set(index, newConnection);
+		
 		System.out.println(connections);
-	}
-	
-	public boolean isInGraph(String name)
-	{
-		for(Vertex<Station> st : stations)
-		{
-			if(st.getValue().getName().equals(name))
-				return true;
-				
-		}
 		
-		return false;
-	}
-	
-	public Vertex<Station> getStation(String name)
-	{
-		for(Vertex<Station> st : stations)
-		{
-			if(st.getValue().getName().equals(name))
-				return st;
-				
-		}
+		Eskom = null;
+		Eskom = new Graph<Station>(stations, connections);
 		
-		return null;
+		return newConnection;
 	}
 	
-	public void removeEdge()
-	{
-		
-	}
-	
-	public ObservableList<String> makeStationList()
+ 	private ObservableList<String> makeStationList()
 	{
 		ObservableList<String> list = FXCollections.observableArrayList();;
 		
 		if(vCount != 0)
 			for(Vertex<Station> st : stations)
-				list.add(st.toString());
+				list.add(st.getValue().toString());
 		else
 			list.add("No Stations Exist");
 		
 		return list;
 	}
+ 	
 	
 	public ArrayList<String> makeEdgeList()
 	{
@@ -412,5 +542,17 @@ public class GraphPane extends StackPane
 		}
 		
 		return ans;
+	}
+	
+	private boolean isInGraph(String name)
+	{
+		for(Vertex<Station> st : stations)
+		{
+			if(st.getValue().getName().equals(name))
+				return true;
+				
+		}
+		
+		return false;
 	}
 }
