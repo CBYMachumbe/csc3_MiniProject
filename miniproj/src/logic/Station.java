@@ -1,4 +1,4 @@
-package ui;
+package logic;
 
 public class Station implements Comparable<Station>{
 	

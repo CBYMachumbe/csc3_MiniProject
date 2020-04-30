@@ -19,11 +19,11 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import logic.*;
 
 public class GraphPane extends StackPane
 {
@@ -33,7 +33,7 @@ public class GraphPane extends StackPane
 	private ArrayList<Edge<Station>> connections;
 	ListView<String> lstStation;
 	private int vCount = 1;
-	private int eCount = 0;
+	private int eCount = 1;
 	
 	
 	public GraphPane()
@@ -46,19 +46,44 @@ public class GraphPane extends StackPane
 		Vertex<Station> s2 = new Vertex<Station>(new Station("Hex", true, false));
 		Vertex<Station> s3 = new Vertex<Station>(new Station("Mdansene", true, true));
 		Vertex<Station> s4 = new Vertex<Station>(new Station("Blur", false, false));
+		Vertex<Station> s5 = new Vertex<Station>(new Station("Alex", true, true));
+		Vertex<Station> s6 = new Vertex<Station>(new Station("Gomora", false, false));
+		Vertex<Station> s7 = new Vertex<Station>(new Station("Lonely", false, false));
 		
-		/*Edge<String> e1 = new Edge<String>(20, s1, s2);
-		Edge<String> e2 = new Edge<String>(3, s1, s3);
-		Edge<String> e3 = new Edge<String>(70, s1, s4);
+		Edge<Station> e1 = new Edge<Station>(20, s1, s2);
+		Edge<Station> e2 = new Edge<Station>(30, s2, s3);
+		Edge<Station> e3 = new Edge<Station>(20, s3, s4);
+		Edge<Station> e4 = new Edge<Station>(10, s4, s5);
+		Edge<Station> e5 = new Edge<Station>(70, s5, s6);
+		Edge<Station> e6 = new Edge<Station>(40, s2, s4);
+		
+		s1.addEdge(e1);
+		s2.addEdge(e2);
+		s2.addEdge(e6);
+		s3.addEdge(e3);
+		s3.addEdge(e2);
+		s4.addEdge(e4);
+		s4.addEdge(e3);
+		s5.addEdge(e5);
+		s5.addEdge(e4);
+		s6.addEdge(e5);
 		
 		connections.add(e1);
 		connections.add(e2);
-		connections.add(e3);*/
+		connections.add(e3);
+		connections.add(e4);
+		connections.add(e5);
+		connections.add(e6);
+
 		stations.add(s1);
 		stations.add(s2);
 		stations.add(s3);
 		stations.add(s4);
+		stations.add(s5);
+		stations.add(s7);
+		stations.add(s6);
 		
+		Eskom = new Graph<Station>(stations,connections);
 		
 		MenuBar menubar = new MenuBar();
 		Menu menuFile = new Menu("File");
@@ -122,10 +147,15 @@ public class GraphPane extends StackPane
 		//Start: Outlet Management Actions
 		btnSubmit.setOnAction(e -> 
 		{
-			boolean isOn = makeBool(txtIsOn.getText(), "Is the outlet working?");
-			boolean isStation = makeBool(txtType.getText(), "Is this vertex a station?");
-			addVertex(new Vertex<Station>(new Station(txtVID.getText(),isOn,isStation)));
-			System.out.println(Eskom);
+			boolean isOn = GraphOps.makeBool(txtIsOn.getText(), "Is the outlet working?");
+			boolean isStation = GraphOps.makeBool(txtType.getText(), "Is this vertex a station?");
+			Vertex<Station> st1 = new Vertex<Station>(new Station(txtVID.getText(),isOn,isStation));
+			GraphOps.addVertex(Eskom, stations, connections, st1);
+			
+			if(stations.size() == 0)
+				lstStation.getItems().clear();
+			
+			lstStation.getItems().add(st1.getValue().toString());
 			
 			addVertex.setContent(VertextBox);
 		});
@@ -140,7 +170,7 @@ public class GraphPane extends StackPane
 			for(String rm : toRemove)
 			{
 				removeToken = new StringTokenizer(rm,",");
-				removeVertex(removeToken.nextToken());
+				GraphOps.removeVertex(Eskom, stations, connections, removeToken.nextToken());
 				lstStation.getItems().remove(rm);
 			}
 			
@@ -156,8 +186,8 @@ public class GraphPane extends StackPane
 			{
 				lstStation.getItems().remove(ad);
 				adjustToken = new StringTokenizer(ad,",");
-				editVertex(adjustToken.nextToken());
-				
+				Vertex<Station> update = GraphOps.editVertex(Eskom, stations, connections, adjustToken.nextToken());
+				lstStation.getItems().add(update.getValue().toString());
 			}
 		});
 		
@@ -223,12 +253,12 @@ public class GraphPane extends StackPane
 			StringTokenizer st1Tokens = new StringTokenizer(toAdd.get(0),",");
 			StringTokenizer st2Tokens = new StringTokenizer(toAdd.get(1),",");
 			
-			Vertex<Station> st1 = getStation(st1Tokens.nextToken());
-			Vertex<Station> st2 = getStation(st2Tokens.nextToken());
+			Vertex<Station> st1 = GraphOps.getStation(stations,st1Tokens.nextToken());
+			Vertex<Station> st2 = GraphOps.getStation(stations,st2Tokens.nextToken());
 			int distance = Integer.parseInt(txtCost.getText());
 			
 			Edge<Station> edge = new Edge<Station>(distance,st1,st2);
-			addEdge(st1, st2, distance);
+			GraphOps.addEdge(Eskom, stations, connections, st1, st2, distance);
 			
 			lstEdges.getItems().add(edge.toString());
 		});
@@ -239,7 +269,7 @@ public class GraphPane extends StackPane
 			
 			for(String rm : toRemove)
 			{
-				removeEdge(rm);
+				GraphOps.removeEdge(Eskom,stations,connections,rm);
 				lstEdges.getItems().remove(rm);
 			}
 		});
@@ -251,7 +281,7 @@ public class GraphPane extends StackPane
 			for(String ad : toAdjust)
 			{
 				lstEdges.getItems().remove(ad);
-				Edge<Station> edge = editEdge(ad);
+				Edge<Station> edge = GraphOps.editEdge(Eskom,stations,connections,ad);
 				lstEdges.getItems().add(edge.toString());
 				
 			}
@@ -260,6 +290,10 @@ public class GraphPane extends StackPane
 		//End: Actions for Edge management
 		
 		//Start: Finding Paths (ui)
+		
+		// return collection of paths 
+		// then compare which one are short and return them
+		// use isOn & isStation filter to supply electricity to outlets
 		
 		Label lblSt1fp = new Label("Station 1 Name:");
 		TextField txtSt1fp = new TextField();
@@ -297,21 +331,23 @@ public class GraphPane extends StackPane
 		
 		VBox pathBox = new VBox(10);
 		pathBox.getChildren().addAll(stBoxfp,btnFindPath);
+		pathBox.getChildren().add(resPathBox);
 		
 		btnFindPath.setOnAction(e ->
 		{
-			pathBox.getChildren().add(resPathBox);
+			boolean o = GraphOps.BFS(Eskom, s2, s1);
+			if(o)
+			{
+				txtPaths.setText(GraphOps.getPath(Eskom, s1, s7));
+			}
+			
 			//resPathBox.setVisible(true);
 		});
 		
 		TitledPane FindPaths = new TitledPane("Find Paths",pathBox);
 		//End: Finding Paths
 		
-		//Start: Display Graph
-		graphCanvas canvas = new graphCanvas();
-		TitledPane Display = new TitledPane("Display Graph",canvas);
-		
-		accordion.getPanes().addAll(addVertex,addEdge,FindPaths,Display);
+		accordion.getPanes().addAll(addVertex,addEdge,FindPaths);
 		VBox controlBox = new VBox();
 		controlBox.getChildren().addAll(menubar,accordion);
 		this.setWidth(200);
@@ -319,184 +355,7 @@ public class GraphPane extends StackPane
 		this.getChildren().addAll(controlBox);
 		
 	}
-	
-	public void addVertex(Vertex<Station> st1)
-	{
-		Vertex<Station> vertex = new Vertex<Station>(st1);
-		
-		if(stations.equals(null))
-		{
-			//Create new instance & use
-			stations = new ArrayList<Graph.Vertex<Station>>();
-		}
-		
-		stations.add(vertex);
-		Eskom = null;
-		Eskom = new Graph<Station>(stations,connections);
-		
-		if(vCount == 0)
-			lstStation.getItems().clear();
-		
-		lstStation.getItems().add(vertex.getValue().toString());
-		
-		vCount++;
-	}
-	
-	public void removeVertex(String stationName)
-	{
-		Vertex<Station> toRemove = null;
-		for(Vertex<Station> st : stations)
-		{
-			if(st.getValue().getName().equals(stationName));
-				toRemove = st;
-		}
-		
-		stations.remove(toRemove);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
-		
-		vCount--;
-	}
-	
-	public void editVertex(String name)
-	{
-		TextInputDialog tdName = new TextInputDialog();
-		tdName.setHeaderText("Enter name of outlet");
-		
-		TextInputDialog tdStation = new TextInputDialog();
-		tdStation.setHeaderText("Is this outlet a station (yes/no)");
-		
-		TextInputDialog tdWorking = new TextInputDialog();
-		tdWorking.setHeaderText("Is this outlet working (yes/no)");
-		
-		tdName.showAndWait();
-		String stName = tdName.getEditor().getText();
-		
-		tdStation.showAndWait();
-		boolean isStaion = makeBool(tdStation.getEditor().getText(),"Is this outlet a station (yes/no)");
-		
-		tdWorking.showAndWait();
-		boolean isOn = makeBool(tdWorking.getEditor().getText(),"Is this outlet working (yes/no)");
-		
-		int index = stations.indexOf(getStation(name));
-		Vertex<Station> update = new Vertex<Station>(new Station(stName,isOn,isStaion));
-		
-		stations.set(index, update);
-		
-		System.out.println(stations);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
-		
-		lstStation.getItems().add(update.getValue().toString());
-	}
-	
-	public Vertex<Station> getStation(String name)
-	{
-		for(Vertex<Station> st : stations)
-		{
-			if(st.getValue().getName().equals(name))
-				return st;
-				
-		}
-		
-		return null;
-	}
-	
-	public void addEdge(Vertex<Station> st1,Vertex<Station> st2, int distance)
-	{
-		Vertex<Station> sta1 = null;
-		Vertex<Station> sta2 = null;
-		
-		if(isInGraph(st1.getValue().getName()) && isInGraph(st2.getValue().getName()))
-		{
-			sta1 = getStation(st1.getValue().getName());
-			sta2 = getStation(st2.getValue().getName());
-		}
-		else if(isInGraph(st1.getValue().getName()) && !isInGraph(st2.getValue().getName()))
-		{
-			sta1 = getStation(st1.getValue().getName());
-			sta2 = new Vertex<Station>(st2);
-		}
-		else if(!isInGraph(st1.getValue().getName()) && isInGraph(st2.getValue().getName()))
-		{
-			sta1 = new Vertex<Station>(st1);
-			sta2 = getStation(st2.getValue().getName());
-		}
-		else
-		{
-			sta1 = new Vertex<Station>(st1);
-			sta2 = new Vertex<Station>(st2);
-		}
-		
-		Edge<Station> edge = new Edge<Station>(distance, sta1,sta2);
-		
-		if(connections.equals(null))
-		{
-			//create new edge instance & use
-			connections = new ArrayList<Graph.Edge<Station>>();
-		}
-		
-		connections.add(edge);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
-		eCount ++;
-	}
-	
-	public void removeEdge(String signature)
-	{
-		Edge<Station> edge = null;
 
-		if(eCount != 0)
-		{
-			for(Edge<Station> e : connections)
-			{
-				if(e.toString().equals(signature))
-					edge = e;
-			}
-		}
-		
-		connections.remove(edge);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
-		
-		eCount--;
-	}
-	
-	public Edge<Station> editEdge(String signature)
-	{
-		
-		Edge<Station> edge = null;
-		if(eCount != 0)
-		{
-			for(Edge<Station> e : connections)
-			{
-				if(e.toString().equals(signature))
-					edge = e;
-			}
-		}
-		
-		TextInputDialog tdDistance = new TextInputDialog();
-		tdDistance.setHeaderText("What is the distance between these outlets");
-		tdDistance.showAndWait();
-		String strDistance = tdDistance.getEditor().getText();
-		int distance = Integer.parseInt(strDistance);
-		
-		Edge<Station> newConnection = new Edge<Station>(distance, edge.getFromVertex(), edge.getToVertex());
-		
-		int index = connections.indexOf(edge);
-		connections.set(index, newConnection);
-		
-		System.out.println(connections);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
-		
-		return newConnection;
-	}
 	
  	private ObservableList<String> makeStationList()
 	{
@@ -510,49 +369,5 @@ public class GraphPane extends StackPane
 		
 		return list;
 	}
- 	
-	
-	public ArrayList<String> makeEdgeList()
-	{
-		ArrayList<String> list = new ArrayList<String>();
-		
-		for(Edge<Station> con : connections)
-			list.add(con.toString());
-		
-		return list;
-	}
-	
-	private boolean makeBool(String verdict, String type) 
-	{
-		boolean ans = false;
-		
-		TextInputDialog ipb = new TextInputDialog();
-		ipb.setHeaderText(type);
-		switch(verdict.toUpperCase())
-		{
-		case "YES":
-			ans = true;
-			break;
-		case "NO":
-			ans = false;
-			break;
-		default:
-			ipb.showAndWait();
-			makeBool(ipb.getEditor().getText(),type);
-		}
-		
-		return ans;
-	}
-	
-	private boolean isInGraph(String name)
-	{
-		for(Vertex<Station> st : stations)
-		{
-			if(st.getValue().getName().equals(name))
-				return true;
-				
-		}
-		
-		return false;
-	}
+
 }
