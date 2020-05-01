@@ -338,7 +338,9 @@ public class GraphPane extends StackPane
 			boolean o = GraphOps.BFS(Eskom, s2, s1);
 			if(o)
 			{
-				txtPaths.setText(GraphOps.getPath(Eskom, s1, s7));
+				String display = "Path from: " + s1.getValue().getName() + ", to: " + s4.getValue().getName() + "\n";
+				txtPaths.setText(display);
+				txtPaths.appendText(GraphOps.getPath(Eskom, s2, s1));
 			}
 			
 			//resPathBox.setVisible(true);

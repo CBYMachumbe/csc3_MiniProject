@@ -11,38 +11,83 @@ public class GraphOps
 {
 	public static String getPath(Graph<Station> graph, Vertex<Station> start, Vertex<Station> end)
 	{
-		String path = "";
+		ArrayList<Vertex<Station>> visited = new ArrayList<>();
+		visited.add(start);
 		
-		ArrayList<Vertex<Station>> visited = new ArrayList<Graph.Vertex<Station>>();
-		ArrayList<Vertex<Station>> nxtToVisit = new ArrayList<Graph.Vertex<Station>>();
+		int distance = 100000000;
+		ArrayList<Vertex<Station>> adjacentVertices = new ArrayList<>();
+
+		String display = "__" + " ===> ";
 		
-		nxtToVisit.add(start);
-		
-		while(!nxtToVisit.isEmpty())
+		for(Edge<Station> e : start.getEdges())
 		{
-			Vertex<Station> v = nxtToVisit.remove(0);
-			path += v.getValue().getName() + " ===> ";
-			if(v.equals(end))
-			{
-				path += v.getEdge(start).getCost();
-				return path;
-			}
-			 
-			if(visited.contains(v))
-			{
-				continue;
-			}
-			
-			visited.add(v);
-			
-			
-			for(Edge<Station> e : v.getEdges())
-			{
-				nxtToVisit.add(e.getToVertex());
-			}
+			Vertex<Station> from = e.getToVertex();
+			adjacentVertices.add(from);
 		}
 		
-		return "No Path Found";
+		for(Vertex<Station> to : adjacentVertices)
+		{
+			if(!(visited.contains(to)))
+			{
+				if((to.equals(end)) && (!visited.contains(end)))
+				{
+					System.out.println(visited);
+					visited.add(end);
+					display +=  end.getValue().getName();
+					return display; 
+				}
+				else
+				{
+					Edge<Station> e = start.getEdge(to);
+					
+					if(distance > e.getCost())
+					{	
+						distance = e.getCost();
+						visited.add(to);
+						display =  to.getValue().getName() + " ===> " + getPath(graph,to,end);	
+					}
+				}
+			}
+			
+		}
+		
+		/*ArrayList<Vertex<Station>> visited = new ArrayList<>();
+		ArrayList<Vertex<Station>> stations = (ArrayList<Vertex<Station>>) graph.getVertices();
+		visited.add(start);
+
+		int size = graph.getVertices().size();
+		int cursor = 0;
+		int distance = 0;
+		
+		DijkstrasObj pathObj = new DijkstrasObj(size);
+		
+		for(Vertex<Station> vertical : visited)
+		{
+			for(Vertex<Station> horizontal : stations)
+			{
+				Edge<Station> edge = vertical.getEdge(horizontal); 
+				
+				if(vertical.equals(horizontal))
+				{
+					pathObj.path[cursor] = vertical;
+					pathObj.augmentCost(distance);
+				}
+				else if(edge != null)
+				{
+					cursor++;
+					pathObj.path[cursor] = horizontal;
+					pathObj.augmentCost(edge.getCost());
+					visited.add(pathObj.getLowVertex(horizontal));
+					distance += edge.getCost();
+				}
+			}
+		}*/
+		
+		
+		
+		
+		
+		return display;
 	}
 	public static boolean BFS(Graph<Station> graph, Vertex<Station> start, Vertex<Station> end)
 	{
