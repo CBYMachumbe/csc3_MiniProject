@@ -11,118 +11,34 @@ public class GraphOps
 {
 	public static String getPath(Graph<Station> graph, Vertex<Station> start, Vertex<Station> end)
 	{
-		ArrayList<Vertex<Station>> visited = new ArrayList<>();
-		visited.add(start);
 		
-		int distance = 100000000;
-		ArrayList<Vertex<Station>> adjacentVertices = new ArrayList<>();
-
-		String display = "__" + " ===> ";
+		//Data structure that has edge relaxation({vertex,cost}) objects
+		return "";
+	}
+	
+	
+	public static void DFS(Graph<Station> Eskom, ArrayList<Vertex<Station>> visited,Vertex<Station> start)
+	{
+		SearchPair sp = new SearchPair();
+		
+		visited.add(start);
 		
 		for(Edge<Station> e : start.getEdges())
 		{
-			Vertex<Station> from = e.getToVertex();
-			adjacentVertices.add(from);
-		}
-		
-		for(Vertex<Station> to : adjacentVertices)
-		{
-			if(!(visited.contains(to)))
-			{
-				if((to.equals(end)) && (!visited.contains(end)))
-				{
-					System.out.println(visited);
-					visited.add(end);
-					display +=  end.getValue().getName();
-					return display; 
-				}
-				else
-				{
-					Edge<Station> e = start.getEdge(to);
-					
-					if(distance > e.getCost())
-					{	
-						distance = e.getCost();
-						visited.add(to);
-						display =  to.getValue().getName() + " ===> " + getPath(graph,to,end);	
-					}
-				}
-			}
+			Vertex<Station> to = e.getToVertex();
 			
-		}
-		
-		/*ArrayList<Vertex<Station>> visited = new ArrayList<>();
-		ArrayList<Vertex<Station>> stations = (ArrayList<Vertex<Station>>) graph.getVertices();
-		visited.add(start);
-
-		int size = graph.getVertices().size();
-		int cursor = 0;
-		int distance = 0;
-		
-		DijkstrasObj pathObj = new DijkstrasObj(size);
-		
-		for(Vertex<Station> vertical : visited)
-		{
-			for(Vertex<Station> horizontal : stations)
+			if(!visited.contains(to))
 			{
-				Edge<Station> edge = vertical.getEdge(horizontal); 
-				
-				if(vertical.equals(horizontal))
-				{
-					pathObj.path[cursor] = vertical;
-					pathObj.augmentCost(distance);
-				}
-				else if(edge != null)
-				{
-					cursor++;
-					pathObj.path[cursor] = horizontal;
-					pathObj.augmentCost(edge.getCost());
-					visited.add(pathObj.getLowVertex(horizontal));
-					distance += edge.getCost();
-				}
-			}
-		}*/
-		
-		
-		
-		
-		
-		return display;
-	}
-	public static boolean BFS(Graph<Station> graph, Vertex<Station> start, Vertex<Station> end)
-	{
-		ArrayList<Vertex<Station>> visited = new ArrayList<Graph.Vertex<Station>>();
-		ArrayList<Vertex<Station>> nxtToVisit = new ArrayList<Graph.Vertex<Station>>();
-		
-		nxtToVisit.add(start);
-		
-		while(!nxtToVisit.isEmpty())
-		{
-			Vertex<Station> v = nxtToVisit.remove(0);
-			if(v.equals(end))
-			{
-				return true;
-			}
-			 
-			if(visited.contains(v))
-			{
-				continue;
-			}
-			
-			visited.add(v);
-			
-			for(Edge<Station> e : v.getEdges())
-			{
-				nxtToVisit.add(e.getToVertex());
+				sp.getPath().add(e);
+				DFS(Eskom,visited,to);
 			}
 		}
-		
-		return false;
 	}
 	
-	public static boolean isInGraph(ArrayList<Vertex<Station>> stations, String name)
+	
+	public static boolean isInGraph(Graph<Station> Eskom, String name)
 	{
-		for(Vertex<Station> st : stations)
+		for(Vertex<Station> st : Eskom.getVertices())
 		{
 			if(st.getValue().getName().equals(name))
 				return true;
@@ -132,13 +48,13 @@ public class GraphOps
 		return false;
 	}
 	
-	public static Edge<Station> editEdge(Graph<Station> Eskom, ArrayList<Vertex<Station>> stations, ArrayList<Edge<Station>> connections ,String signature)
+	public static Edge<Station> editEdge(Graph<Station> Eskom, String signature)
 	{
 		
 		Edge<Station> edge = null;
-		if(connections.size() != 0)
+		if(Eskom.getEdges().size() != 0)
 		{
-			for(Edge<Station> e : connections)
+			for(Edge<Station> e : Eskom.getEdges())
 			{
 				if(e.toString().equals(signature))
 					edge = e;
@@ -153,39 +69,32 @@ public class GraphOps
 		
 		Edge<Station> newConnection = new Edge<Station>(distance, edge.getFromVertex(), edge.getToVertex());
 		
-		int index = connections.indexOf(edge);
-		connections.set(index, newConnection);
-		
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
+		int index = Eskom.getEdges().indexOf(edge);
+		Eskom.getEdges().set(index, newConnection);
 		
 		return newConnection;
 	}
 	
-	public static void removeEdge(Graph<Station> Eskom, ArrayList<Vertex<Station>> stations, ArrayList<Edge<Station>> connections,String signature)
+	public static void removeEdge(Graph<Station> Eskom, String signature)
 	{
 		Edge<Station> edge = null;
 
-		if(connections.size() != 0)
+		if(Eskom.getEdges().size() != 0)
 		{
-			for(Edge<Station> e : connections)
+			for(Edge<Station> e : Eskom.getEdges())
 			{
 				if(e.toString().equals(signature))
 					edge = e;
 			}
 		}
 		
-		connections.remove(edge);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
+		Eskom.getEdges().remove(edge);
 
 	}
 	
-	public static Vertex<Station> getStation(ArrayList<Vertex<Station>> stations,String name)
+	public static Vertex<Station> getStation(Graph<Station> eskom,String name)
 	{
-		for(Vertex<Station> st : stations)
+		for(Vertex<Station> st : eskom.getVertices())
 		{
 			if(st.getValue().getName().equals(name))
 				return st;
@@ -195,25 +104,25 @@ public class GraphOps
 		return null;
 	}
 	
-	public static void addEdge(Graph<Station> Eskom, ArrayList<Vertex<Station>> stations, ArrayList<Edge<Station>> connections,Vertex<Station> st1,Vertex<Station> st2, int distance)
+	public static void addEdge(Graph<Station> Eskom, Vertex<Station> st1,Vertex<Station> st2, int distance)
 	{
 		Vertex<Station> sta1 = null;
 		Vertex<Station> sta2 = null;
 		
-		if(GraphOps.isInGraph(stations,st1.getValue().getName()) && GraphOps.isInGraph(stations,st2.getValue().getName()))
+		if(GraphOps.isInGraph(Eskom,st1.getValue().getName()) && GraphOps.isInGraph(Eskom,st2.getValue().getName()))
 		{
-			sta1 = getStation(stations,st1.getValue().getName());
-			sta2 = getStation(stations,st2.getValue().getName());
+			sta1 = getStation(Eskom,st1.getValue().getName());
+			sta2 = getStation(Eskom,st2.getValue().getName());
 		}
-		else if(GraphOps.isInGraph(stations,st1.getValue().getName()) && ! GraphOps.isInGraph(stations,st2.getValue().getName()))
+		else if(GraphOps.isInGraph(Eskom,st1.getValue().getName()) && ! GraphOps.isInGraph(Eskom,st2.getValue().getName()))
 		{
-			sta1 = getStation(stations,st1.getValue().getName());
+			sta1 = getStation(Eskom,st1.getValue().getName());
 			sta2 = new Vertex<Station>(st2);
 		}
-		else if(!GraphOps.isInGraph(stations,st1.getValue().getName()) && GraphOps.isInGraph(stations,st2.getValue().getName()))
+		else if(!GraphOps.isInGraph(Eskom,st1.getValue().getName()) && GraphOps.isInGraph(Eskom,st2.getValue().getName()))
 		{
 			sta1 = new Vertex<Station>(st1);
-			sta2 = getStation(stations,st2.getValue().getName());
+			sta2 = getStation(Eskom,st2.getValue().getName());
 		}
 		else
 		{
@@ -223,55 +132,33 @@ public class GraphOps
 		
 		Edge<Station> edge = new Edge<Station>(distance, sta1,sta2);
 		
-		int st1i = stations.indexOf(sta1);
+		int st1i = Eskom.getVertices().indexOf(sta1);
 		sta1.addEdge(edge);
-		stations.set(st1i, sta1);
+		Eskom.getVertices().set(st1i, sta1);
 		
-		int st2i = stations.indexOf(sta2);
+		int st2i = Eskom.getVertices().indexOf(sta2);
 		sta2.addEdge(edge);
-		stations.set(st2i, sta2);
+		Eskom.getVertices().set(st2i, sta2);
 		
-		
-		if(connections.equals(null))
-		{
-			//create new edge instance & use
-			connections = new ArrayList<Graph.Edge<Station>>();
-		}
-		
-		connections.add(edge);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
+		Eskom.getEdges().add(edge);
 	}
 	
-	public static void removeVertex(Graph<Station> Eskom, ArrayList<Vertex<Station>> stations,ArrayList<Edge<Station>> connections,String stationName)
+	public static void removeVertex(Graph<Station> Eskom, String stationName)
 	{
 		Vertex<Station> toRemove = null;
-		for(Vertex<Station> st : stations)
+		for(Vertex<Station> st : Eskom.getVertices())
 		{
 			if(st.getValue().getName().equals(stationName));
 				toRemove = st;
 		}
 		
-		stations.remove(toRemove);
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
+		Eskom.getVertices().remove(toRemove);
 	}
 	
-	public static void addVertex(Graph<Station> Eskom, ArrayList<Vertex<Station>> stations,ArrayList<Edge<Station>> connections,Vertex<Station> st1)
+	public static void addVertex(Graph<Station> Eskom, Vertex<Station> st1)
 	{
 		Vertex<Station> vertex = new Vertex<Station>(st1);
-		
-		if(stations.equals(null))
-		{
-			//Create new instance & use
-			stations = new ArrayList<Graph.Vertex<Station>>();
-		}
-		
-		stations.add(vertex);
-		Eskom = null;
-		Eskom = new Graph<Station>(stations,connections);
+		Eskom.getVertices().add(vertex);
 	}
 	
 	public static boolean makeBool(String verdict, String type) 
@@ -296,7 +183,7 @@ public class GraphOps
 		return ans;
 	}
 
-	public static Vertex<Station> editVertex(Graph<Station> Eskom, ArrayList<Vertex<Station>> stations,ArrayList<Edge<Station>> connections,String name)
+	public static Vertex<Station> editVertex(Graph<Station> Eskom, String name)
 	{
 		TextInputDialog tdName = new TextInputDialog();
 		tdName.setHeaderText("Enter name of outlet");
@@ -316,15 +203,11 @@ public class GraphOps
 		tdWorking.showAndWait();
 		boolean isOn = makeBool(tdWorking.getEditor().getText(),"Is this outlet working (yes/no)");
 		
-		int index = stations.indexOf(GraphOps.getStation(stations, name));
+		int index = Eskom.getVertices().indexOf(GraphOps.getStation(Eskom, name));
 		Vertex<Station> update = new Vertex<Station>(new Station(stName,isOn,isStaion));
 		
-		stations.set(index, update);
 		
-		
-		Eskom = null;
-		Eskom = new Graph<Station>(stations, connections);
-		
+		Eskom.getVertices().set(index, update);
 		return update;
 		
 	}

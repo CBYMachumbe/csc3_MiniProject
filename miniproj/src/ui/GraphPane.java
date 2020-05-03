@@ -28,18 +28,20 @@ import logic.*;
 public class GraphPane extends StackPane
 {
 	private Graph<Station> Eskom;
-	
 	private ArrayList<Vertex<Station>> stations;
 	private ArrayList<Edge<Station>> connections;
-	ListView<String> lstStation;
-	private int vCount = 1;
-	private int eCount = 1;
+	
+	//Lists used from selecting and viewing nodes in the graph
+	private ListView<String> lstStation;
+	private ListView<String> lstEdge;
+	private ListView<String> lstEdges;
+	private ListView<String> lstPaths;
 	
 	
 	public GraphPane()
 	{
 		Eskom = new Graph<Station>();
-		stations = new ArrayList<Graph.Vertex<Station>>();
+		/*stations = new ArrayList<Graph.Vertex<Station>>();
 		connections = new ArrayList<Graph.Edge<Station>>();
 		
 		Vertex<Station> s1 = new Vertex<Station>(new Station("Mabopane", true, false));
@@ -83,7 +85,7 @@ public class GraphPane extends StackPane
 		stations.add(s7);
 		stations.add(s6);
 		
-		Eskom = new Graph<Station>(stations,connections);
+		Eskom = new Graph<Station>(stations,connections);*/
 		
 		MenuBar menubar = new MenuBar();
 		Menu menuFile = new Menu("File");
@@ -93,12 +95,9 @@ public class GraphPane extends StackPane
 		menubar.getMenus().addAll(menuFile);
 		
 		Accordion accordion = new Accordion();
-		lstStation = new ListView<String>();
+		initLists();
 		
 		//Start: Adding of a Vertex (ui)
-		lstStation.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		lstStation.setItems((ObservableList<String>) makeStationList());
-		
 		
 		Label lblVID = new Label("Station Name:");
 		TextField txtVID = new TextField();
@@ -139,25 +138,22 @@ public class GraphPane extends StackPane
 		HBox VertextBox = new HBox(10);
 		VertextBox.getChildren().addAll(vbox,vListBox);
 		
-		
-		
 		TitledPane addVertex = new TitledPane("Outlet Management (Vertex)",VertextBox);
 		//End: Adding of a Vertex
 		
 		//Start: Outlet Management Actions
 		btnSubmit.setOnAction(e -> 
 		{
+			if(Eskom.getVertices().size() == 0)
+				lstStation.getItems().clear();
+			
 			boolean isOn = GraphOps.makeBool(txtIsOn.getText(), "Is the outlet working?");
 			boolean isStation = GraphOps.makeBool(txtType.getText(), "Is this vertex a station?");
 			Vertex<Station> st1 = new Vertex<Station>(new Station(txtVID.getText(),isOn,isStation));
-			GraphOps.addVertex(Eskom, stations, connections, st1);
-			
-			if(stations.size() == 0)
-				lstStation.getItems().clear();
-			
+			GraphOps.addVertex(Eskom,st1);
 			lstStation.getItems().add(st1.getValue().toString());
 			
-			addVertex.setContent(VertextBox);
+			//addVertex.setContent(VertextBox);
 		});
 		
 		//Used to removed an outlet
@@ -170,7 +166,7 @@ public class GraphPane extends StackPane
 			for(String rm : toRemove)
 			{
 				removeToken = new StringTokenizer(rm,",");
-				GraphOps.removeVertex(Eskom, stations, connections, removeToken.nextToken());
+				GraphOps.removeVertex(Eskom, removeToken.nextToken());
 				lstStation.getItems().remove(rm);
 			}
 			
@@ -186,7 +182,7 @@ public class GraphPane extends StackPane
 			{
 				lstStation.getItems().remove(ad);
 				adjustToken = new StringTokenizer(ad,",");
-				Vertex<Station> update = GraphOps.editVertex(Eskom, stations, connections, adjustToken.nextToken());
+				Vertex<Station> update = GraphOps.editVertex(Eskom, adjustToken.nextToken());
 				lstStation.getItems().add(update.getValue().toString());
 			}
 		});
@@ -197,12 +193,11 @@ public class GraphPane extends StackPane
 		//Start: Adding of a edge (ui)
 		
 		//Add side
-		ListView<String> lstEdge = new ListView<String>();
-		lstEdge.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
 		
-		if(vCount != 0)
-			for(Vertex<Station> st : stations)
+		
+		if(Eskom.getVertices().size() != 0)
+			for(Vertex<Station> st : Eskom.getVertices())
 				lstEdge.getItems().add(st.getValue().toString());
 		
 		Label lblList = new Label("Select Two Outlets");
@@ -216,11 +211,10 @@ public class GraphPane extends StackPane
 		lstBox.getChildren().addAll(lblList,lstEdge,costBox,btnSubmitEdge);
 		
 		//Remove side
-		ListView<String> lstEdges = new ListView<String>();
-		lstEdges.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
-		if(eCount != 0)
-			for(Edge<Station> e : connections)
+		
+		if(Eskom.getEdges().size() != 0)
+			for(Edge<Station> e : Eskom.getEdges())
 				lstEdges.getItems().add(e.toString());
 		
 		Label lblEdgelst = new Label("Select Edge(s):");
@@ -253,12 +247,12 @@ public class GraphPane extends StackPane
 			StringTokenizer st1Tokens = new StringTokenizer(toAdd.get(0),",");
 			StringTokenizer st2Tokens = new StringTokenizer(toAdd.get(1),",");
 			
-			Vertex<Station> st1 = GraphOps.getStation(stations,st1Tokens.nextToken());
-			Vertex<Station> st2 = GraphOps.getStation(stations,st2Tokens.nextToken());
+			Vertex<Station> st1 = GraphOps.getStation(Eskom,st1Tokens.nextToken());
+			Vertex<Station> st2 = GraphOps.getStation(Eskom,st2Tokens.nextToken());
 			int distance = Integer.parseInt(txtCost.getText());
 			
 			Edge<Station> edge = new Edge<Station>(distance,st1,st2);
-			GraphOps.addEdge(Eskom, stations, connections, st1, st2, distance);
+			GraphOps.addEdge(Eskom, st1, st2, distance);
 			
 			lstEdges.getItems().add(edge.toString());
 		});
@@ -269,7 +263,7 @@ public class GraphPane extends StackPane
 			
 			for(String rm : toRemove)
 			{
-				GraphOps.removeEdge(Eskom,stations,connections,rm);
+				GraphOps.removeEdge(Eskom,rm);
 				lstEdges.getItems().remove(rm);
 			}
 		});
@@ -281,7 +275,7 @@ public class GraphPane extends StackPane
 			for(String ad : toAdjust)
 			{
 				lstEdges.getItems().remove(ad);
-				Edge<Station> edge = GraphOps.editEdge(Eskom,stations,connections,ad);
+				Edge<Station> edge = GraphOps.editEdge(Eskom,ad);
 				lstEdges.getItems().add(edge.toString());
 				
 			}
@@ -290,25 +284,6 @@ public class GraphPane extends StackPane
 		//End: Actions for Edge management
 		
 		//Start: Finding Paths (ui)
-		
-		// return collection of paths 
-		// then compare which one are short and return them
-		// use isOn & isStation filter to supply electricity to outlets
-		
-		Label lblSt1fp = new Label("Station 1 Name:");
-		TextField txtSt1fp = new TextField();
-		HBox st1Boxfp = new HBox(44);
-		
-		st1Boxfp.getChildren().addAll(lblSt1fp,txtSt1fp);
-		
-		Label lblSt2fp = new Label("Station 2 Name:");
-		TextField txtSt2fp = new TextField();
-		HBox st2Boxfp = new HBox(10);
-		
-		st2Boxfp.getChildren().addAll(lblSt2fp,txtSt2fp);
-		
-		HBox stBoxfp = new HBox(30);
-		stBoxfp.getChildren().addAll(st1Boxfp,st2Boxfp);
 		
 		Button btnFindPath = new Button("Find Path");
 		
@@ -327,24 +302,33 @@ public class GraphPane extends StackPane
 		VBox resPathBox = new VBox(10);
 		resPathBox.getChildren().addAll(pathABox,btnGetShortPath,shortPathBox);
 		
-		//resPathBox.setVisible(false);
-		
 		VBox pathBox = new VBox(10);
-		pathBox.getChildren().addAll(stBoxfp,btnFindPath);
+		pathBox.getChildren().addAll(lstPaths,btnFindPath);
 		pathBox.getChildren().add(resPathBox);
 		
 		btnFindPath.setOnAction(e ->
 		{
-			boolean o = GraphOps.BFS(Eskom, s2, s1);
-			if(o)
+			ObservableList<String> path = lstPaths.getSelectionModel().getSelectedItems();
+			
+			if(path.size() == 2)
 			{
-				String display = "Path from: " + s1.getValue().getName() + ", to: " + s4.getValue().getName() + "\n";
-				txtPaths.setText(display);
-				txtPaths.appendText(GraphOps.getPath(Eskom, s2, s1));
+				StringTokenizer st1Tokens = new StringTokenizer(path.get(0),",");
+				StringTokenizer st2Tokens = new StringTokenizer(path.get(1),",");
+				
+				Vertex<Station> st1 = GraphOps.getStation(Eskom,st1Tokens.nextToken());
+				Vertex<Station> st2 = GraphOps.getStation(Eskom,st2Tokens.nextToken());
+
+				ArrayList<Vertex<Station>> visited = new ArrayList<>();
+				GraphOps.DFS(Eskom,visited, st1);
+				
+				if(visited.contains(st2))
+					txtPaths.setText(visited.toString());
+				else
+					txtPaths.setText("No Path Found!");
 			}
 			
-			//resPathBox.setVisible(true);
 		});
+		
 		
 		TitledPane FindPaths = new TitledPane("Find Paths",pathBox);
 		//End: Finding Paths
@@ -358,13 +342,31 @@ public class GraphPane extends StackPane
 		
 	}
 
+	private void initLists()
+	{
+		lstStation = new ListView<String>();
+		lstStation.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		lstStation.setItems((ObservableList<String>) makeStationList());
+		
+		lstEdge = new ListView<String>();
+		lstEdge.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		
+		lstEdges = new ListView<String>();
+		lstEdges.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		
+		lstPaths = new ListView<String>();
+		lstPaths.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		
+		lstEdge.itemsProperty().bind(lstStation.itemsProperty());
+		lstPaths.itemsProperty().bind(lstStation.itemsProperty());
+	}
 	
  	private ObservableList<String> makeStationList()
 	{
 		ObservableList<String> list = FXCollections.observableArrayList();;
 		
-		if(vCount != 0)
-			for(Vertex<Station> st : stations)
+		if(Eskom.getVertices().size() != 0)
+			for(Vertex<Station> st : Eskom.getVertices())
 				list.add(st.getValue().toString());
 		else
 			list.add("No Stations Exist");
