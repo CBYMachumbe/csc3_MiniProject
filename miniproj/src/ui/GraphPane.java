@@ -41,7 +41,7 @@ public class GraphPane extends StackPane
 	public GraphPane()
 	{
 		Eskom = new Graph<Station>();
-		/*stations = new ArrayList<Graph.Vertex<Station>>();
+		stations = new ArrayList<Graph.Vertex<Station>>();
 		connections = new ArrayList<Graph.Edge<Station>>();
 		
 		Vertex<Station> s1 = new Vertex<Station>(new Station("Mabopane", true, false));
@@ -85,7 +85,7 @@ public class GraphPane extends StackPane
 		stations.add(s7);
 		stations.add(s6);
 		
-		Eskom = new Graph<Station>(stations,connections);*/
+		Eskom = new Graph<Station>(stations,connections);
 		
 		MenuBar menubar = new MenuBar();
 		Menu menuFile = new Menu("File");

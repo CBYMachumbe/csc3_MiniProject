@@ -19,8 +19,6 @@ public class GraphOps
 	
 	public static void DFS(Graph<Station> Eskom, ArrayList<Vertex<Station>> visited,Vertex<Station> start)
 	{
-		SearchPair sp = new SearchPair();
-		
 		visited.add(start);
 		
 		for(Edge<Station> e : start.getEdges())
@@ -29,7 +27,6 @@ public class GraphOps
 			
 			if(!visited.contains(to))
 			{
-				sp.getPath().add(e);
 				DFS(Eskom,visited,to);
 			}
 		}
