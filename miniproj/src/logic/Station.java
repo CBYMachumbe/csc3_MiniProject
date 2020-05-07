@@ -1,72 +1,34 @@
 package logic;
 
-public class Station implements Comparable<Station>{
+public class Station extends Outlet implements Comparable<Outlet>
+{
+	double supply;
 	
-	private String name;
-	private boolean isStation;
-	private boolean isOn;
-
-	public Station(String name, boolean isOn, boolean isStation)
+	public Station(String name, boolean isOn, double supply)
 	{
-		this.name = name;
-		this.isStation = isStation;
-		this.isOn = isOn;
+		super(name, isOn);
+		this.supply = supply;
+		setType("Station");
 	}
 
-	public String getName() {
-		return name;
+	public double getSupply() {
+		return supply;
 	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public boolean isOn() {
-		return isOn;
-	}
-	public void setOn(boolean isOn) {
-		this.isOn = isOn;
+
+	public void setSupply(double supply) {
+		this.supply = supply;
 	}
 
 	@Override
 	public String toString() 
 	{
-		String display = name;
-		
-		if(isStation)
-		{
-			if(isOn)
-			{
-				display += ", station is working";
-				return display;
-			}
-			else
-			{
-				display += ", station is not working";
-				return display;
-			}
-			
-		}
+		String display = "Station: " + getName() + ", Supply Cap: " + supply + " kW, is";
+	
+		if(isOn())
+			display += " Operating";
 		else
-		{
-			if(isOn)
-			{
-				display += ", home is getting electity";
-				return display;
-			}
-			else
-			{
-				display += ", home is not getting electricty";
-				return display;
-			}
-		}
-	}
-
-	@Override
-	public int compareTo(Station otherStation) 
-	{
-		if(this.name.equals(otherStation.name))
-			return 0;
-		else
-			return -1;
-	}
-		
+			display += " Not Operating ";
+	
+		return display;
+	}	
 }
